@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>One-time code — AssetFlow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <main class="auth-shell auth-shell-user"><section class="auth-card auth-card-wide" aria-labelledby="otp-title">
+    <a class="back-link" href="{{ url_for('auth.login') }}">← Back to sign in</a>
+    <div class="brand"><div class="brand-mark"></div><span class="brand-name" style="color:var(--ink);">AssetFlow</span></div>
+    <h1 id="otp-title">Sign in with a code</h1>
+    <p class="subtitle">Use the email or mobile number registered to your account.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+    {% if not code_sent %}
+      <form method="post" class="form-stack"><input type="hidden" name="action" value="send">
+        <div class="field"><label for="identity">Email or mobile number</label><input id="identity" name="identity" required autofocus value="{{ identity }}" autocomplete="username" placeholder="you@company.com or +91 98765 43210"></div>
+        <button class="btn btn-primary btn-block" type="submit">Send one-time code</button>
+      </form>
+    {% else %}
+      <form method="post" class="form-stack"><input type="hidden" name="action" value="verify">
+        <div class="field"><label for="code">6-digit code</label><input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus autocomplete="one-time-code" placeholder="000000"></div>
+        <button class="btn btn-primary btn-block" type="submit">Verify and sign in</button>
+      </form>
+      <p class="auth-footer">Didn't receive it? <a href="{{ url_for('auth.otp_login') }}">Try another email or mobile number</a></p>
+    {% endif %}
+  </section></main>
+</body>
+</html>

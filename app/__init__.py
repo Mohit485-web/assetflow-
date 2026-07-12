@@ -1,4 +1,5 @@
 import os
+from sqlalchemy import inspect, text
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -50,12 +51,21 @@ def create_app():
             raise
 
         db.create_all()
+        _ensure_schema()
         print("Tables created successfully!")
 
         _seed_admin()
         print("Admin seeded successfully!")
 
     return app
+
+
+def _ensure_schema():
+    """Apply the small SQLite schema update needed by existing demo databases."""
+    columns = {column["name"] for column in inspect(db.engine).get_columns("users")}
+    if "phone" not in columns:
+        db.session.execute(text("ALTER TABLE users ADD COLUMN phone VARCHAR(30)"))
+        db.session.commit()
 
 
 def _seed_admin():

@@ -7,39 +7,39 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <div class="auth-shell">
-    <div class="auth-card">
+  <main class="auth-shell auth-shell-user">
+    <section class="auth-card auth-card-wide" aria-labelledby="login-title">
+      <div class="auth-topline"><span>ASSETFLOW WORKSPACE</span><a href="{{ url_for('auth.admin_login') }}">Admin access</a></div>
       <div class="brand">
-        <div class="brand-mark"></div>
-        <span class="brand-name" style="color:var(--ink);">AssetFlow</span>
+        <div class="brand-mark"></div><span class="brand-name" style="color:var(--ink);">AssetFlow</span>
       </div>
-      <h2>Sign in</h2>
-      <p class="subtitle">Track, allocate, and audit your organization's assets.</p>
+      <h1 id="login-title">Welcome back</h1>
+      <p class="subtitle">Sign in to manage your assets, bookings, and requests.</p>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div class="flash-stack">
-          {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">{{ message }}</div>
-          {% endfor %}
-        </div>
-        {% endif %}
+        {% if messages %}<div class="flash-stack">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
       {% endwith %}
+
+      <a class="google-button" href="{{ url_for('auth.google_login') }}" aria-label="Continue with Google">
+        <span class="google-g" aria-hidden="true">G</span><span>Continue with Google</span>
+      </a>
+      <div class="auth-divider"><span>or</span></div>
 
       <form method="post" class="form-stack">
         <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autofocus placeholder="you@company.com">
+          <label for="email">Work email</label>
+          <input type="email" id="email" name="email" required autofocus autocomplete="email" placeholder="you@company.com">
         </div>
         <div class="field">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" required placeholder="••••••••">
+          <div class="field-label-row"><label for="password">Password</label><a href="{{ url_for('auth.otp_login') }}">Use a one-time code</a></div>
+          <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+        <button type="submit" class="btn btn-primary btn-block">Sign in with email</button>
       </form>
 
-      <p class="auth-footer">No account yet? <a href="{{ url_for('auth.signup') }}">Create one</a></p>
-    </div>
-  </div>
+      <a class="otp-callout" href="{{ url_for('auth.otp_login') }}"><span class="otp-callout-icon">#</span><span><strong>Sign in with email or mobile OTP</strong><small>No password needed — request a secure one-time code.</small></span><span aria-hidden="true">→</span></a>
+      <p class="auth-footer">New to AssetFlow? <a href="{{ url_for('auth.signup') }}">Create an employee account</a></p>
+    </section>
+  </main>
 </body>
 </html>
