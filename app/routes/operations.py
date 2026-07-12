@@ -1,12 +1,14 @@
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+import csv
+import io
 from sqlalchemy import or_
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from app import db
 from app.models import (ActivityLog, Allocation, Asset, AssetCategory, AuditCycle, AuditItem,
     Booking, Department, MaintenanceRequest, TransferRequest, User, Notification,
-    ASSET_ALLOCATED, ASSET_AVAILABLE, ASSET_LOST, ASSET_MAINTENANCE, ASSET_STATUSES)
+    ASSET_ALLOCATED, ASSET_AVAILABLE, ASSET_LOST, ASSET_MAINTENANCE, ASSET_STATUSES, ROLES)
 
 operations_bp = Blueprint("operations", __name__)
 
@@ -62,6 +64,14 @@ def delete_asset(asset_id):
     if Allocation.query.filter_by(asset_id=asset.id, status="Active").first() or Booking.query.filter_by(asset_id=asset.id, status="Upcoming").first(): flash("This asset has active records and cannot be deleted.", "error")
     else: db.session.delete(asset); _record(f"Deleted {asset.tag}", "Asset"); db.session.commit(); flash("Asset deleted.", "success")
     return redirect(url_for("operations.assets"))
+
+@operations_bp.route("/assets/<int:asset_id>/history")
+@login_required
+def asset_history(asset_id):
+    asset = db.get_or_404(Asset, asset_id)
+    allocations = Allocation.query.filter_by(asset_id=asset.id).order_by(Allocation.allocated_date.desc()).all()
+    maintenance_items = MaintenanceRequest.query.filter_by(asset_id=asset.id).order_by(MaintenanceRequest.created_at.desc()).all()
+    return render_template("operations/asset_history.html", asset=asset, allocations=allocations, maintenance_items=maintenance_items)
 
 @operations_bp.route("/allocations", methods=["GET", "POST"])
 @login_required
@@ -178,7 +188,20 @@ def close_audit(cycle_id):
 @login_required
 def reports():
     metrics = [("Registered assets", Asset.query.count()), ("Available assets", Asset.query.filter_by(status=ASSET_AVAILABLE).count()), ("Allocated assets", Allocation.query.filter_by(status="Active").count()), ("Maintenance requests", MaintenanceRequest.query.count()), ("Active bookings", Booking.query.filter(Booking.status.in_(["Upcoming", "Ongoing"])).count())]
-    return render_template("operations/reports.html", metrics=metrics)
+    category_summary = [(category.name, Asset.query.filter_by(category_id=category.id).count()) for category in AssetCategory.query.order_by(AssetCategory.name).all()]
+    department_summary = [(department.name, Allocation.query.filter_by(department_id=department.id, status="Active").count()) for department in Department.query.order_by(Department.name).all()]
+    maintenance_summary = [(asset, MaintenanceRequest.query.filter_by(asset_id=asset.id).count()) for asset in Asset.query.order_by(Asset.name).all()]
+    maintenance_summary = [item for item in maintenance_summary if item[1]]
+    return render_template("operations/reports.html", metrics=metrics, category_summary=category_summary, department_summary=department_summary, maintenance_summary=maintenance_summary)
+
+@operations_bp.route("/reports/export")
+@login_required
+def export_report():
+    output = io.StringIO(); writer = csv.writer(output)
+    writer.writerow(["Asset Tag", "Name", "Category", "Status", "Location", "Condition", "Acquisition Cost"])
+    for asset in Asset.query.order_by(Asset.tag).all(): writer.writerow([asset.tag, asset.name, asset.category.name, asset.status, asset.location or "", asset.condition, asset.acquisition_cost or ""])
+    response = make_response(output.getvalue()); response.headers["Content-Disposition"] = "attachment; filename=assetflow-assets.csv"; response.headers["Content-Type"] = "text/csv"
+    return response
 
 @operations_bp.route("/activity")
 @login_required
@@ -193,8 +216,24 @@ def organization():
     if request.method == "POST":
         kind, name = request.form.get("kind"), request.form.get("name", "").strip()
         model = Department if kind == "department" else AssetCategory if kind == "category" else None
-        if not name or not model: flash("Enter a valid name.", "error")
-        elif model.query.filter_by(name=name).first(): flash("That name already exists.", "error")
-        else: db.session.add(model(name=name)); _record(f"Created {kind} {name}", model.__name__); db.session.commit(); flash(f"{kind.title()} created.", "success")
+        if kind in {"department", "category"}:
+            if not name or not model: flash("Enter a valid name.", "error")
+            elif model.query.filter_by(name=name).first(): flash("That name already exists.", "error")
+            else: db.session.add(model(name=name)); _record(f"Created {kind} {name}", model.__name__); db.session.commit(); flash(f"{kind.title()} created.", "success")
+        elif kind == "department_update":
+            department = db.get_or_404(Department, request.form.get("department_id", type=int)); department.status = request.form.get("status") if request.form.get("status") in {"Active", "Inactive"} else department.status
+            department.head_id = request.form.get("head_id", type=int) or None; department.parent_id = request.form.get("parent_id", type=int) or None
+            if department.parent_id == department.id: department.parent_id = None
+            _record(f"Updated department {department.name}", "Department"); db.session.commit(); flash("Department updated.", "success")
+        elif kind == "category_update":
+            category = db.get_or_404(AssetCategory, request.form.get("category_id", type=int)); category.custom_fields = request.form.get("custom_fields", "").strip() or None
+            _record(f"Updated category {category.name}", "AssetCategory"); db.session.commit(); flash("Category updated.", "success")
+        elif kind == "employee_update":
+            user = db.get_or_404(User, request.form.get("user_id", type=int)); role, status = request.form.get("role"), request.form.get("status")
+            if role in ROLES: user.role = role
+            if status in {"Active", "Inactive"}: user.status = status
+            department_id = request.form.get("department_id", type=int); user.department_id = department_id if not department_id or db.session.get(Department, department_id) else user.department_id
+            _record(f"Updated employee {user.name}", "User"); db.session.commit(); flash("Employee updated.", "success")
+        else: flash("Unknown organization action.", "error")
         return redirect(url_for("operations.organization"))
     return render_template("operations/organization.html", departments=Department.query.order_by(Department.name).all(), categories=AssetCategory.query.order_by(AssetCategory.name).all(), users=User.query.order_by(User.name).all())
