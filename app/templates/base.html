@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}AssetFlow{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>document.documentElement.dataset.theme=localStorage.getItem('assetflow-theme')||'light';</script>
 </head>
 <body>
   <div class="app-shell">
@@ -35,6 +36,7 @@
 
       {% if current_user.is_authenticated %}
       <div class="sidebar-footer">
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch color theme"><span aria-hidden="true">☾</span><span id="theme-label">Dark mode</span></button>
         {{ current_user.name }}
         <div><span class="role-pill">{{ current_user.role }}</span></div>
         <a class="nav-link" style="padding-left:0; margin-top:8px;" href="{{ url_for('auth.logout') }}">Sign out</a>
@@ -56,5 +58,19 @@
       {% block content %}{% endblock %}
     </main>
   </div>
+  <script>
+    (() => {
+      const toggle = document.getElementById('theme-toggle');
+      const label = document.getElementById('theme-label');
+      if (!toggle) return;
+      const updateLabel = () => { label.textContent = document.documentElement.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode'; };
+      updateLabel();
+      toggle.addEventListener('click', () => {
+        document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('assetflow-theme', document.documentElement.dataset.theme);
+        updateLabel();
+      });
+    })();
+  </script>
 </body>
 </html>
