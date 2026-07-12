@@ -13,3 +13,4 @@ class Config:
     "sqlite:///assetflow.db"
 )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    OTP_DEMO_MODE = os.environ.get("OTP_DEMO_MODE", "true").lower() == "true"

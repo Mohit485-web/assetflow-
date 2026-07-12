@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}Reports — AssetFlow{% endblock %}
+{% block content %}<div class="topbar"><div><h1>Reports & Analytics</h1><div class="subtitle">A live summary of the data currently in AssetFlow.</div></div></div><div class="kpi-grid">{% for label, value in metrics %}<div class="kpi-card"><div class="kpi-value">{{ value }}</div><div class="kpi-label">{{ label }}</div></div>{% endfor %}</div><section class="card"><h3>Next reports</h3><p class="subtitle">As you add assets, allocations, bookings, and maintenance activity, this page will provide utilization, department, and maintenance trend reporting.</p></section>{% endblock %}

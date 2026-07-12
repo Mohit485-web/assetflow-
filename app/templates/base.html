@@ -17,19 +17,19 @@
       <nav>
         <div class="nav-group-label">Operate</div>
         <a class="nav-link {{ 'active' if request.endpoint == 'dashboard.home' }}" href="{{ url_for('dashboard.home') }}">Dashboard</a>
-        <a class="nav-link" href="#">Assets</a>
-        <a class="nav-link" href="#">Allocations &amp; Transfers</a>
-        <a class="nav-link" href="#">Resource Bookings</a>
-        <a class="nav-link" href="#">Maintenance</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'operations.assets' }}" href="{{ url_for('operations.assets') }}">Assets</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'operations.allocations' }}" href="{{ url_for('operations.allocations') }}">Allocations &amp; Transfers</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'operations.bookings' }}" href="{{ url_for('operations.bookings') }}">Resource Bookings</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'operations.maintenance' }}" href="{{ url_for('operations.maintenance') }}">Maintenance</a>
 
         <div class="nav-group-label">Govern</div>
-        <a class="nav-link" href="#">Audit Cycles</a>
-        <a class="nav-link" href="#">Reports</a>
-        <a class="nav-link" href="#">Activity Log</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'operations.audits' }}" href="{{ url_for('operations.audits') }}">Audit Cycles</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'operations.reports' }}" href="{{ url_for('operations.reports') }}">Reports</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'operations.activity' }}" href="{{ url_for('operations.activity') }}">Activity Log</a>
 
         {% if current_user.is_authenticated and current_user.is_admin %}
         <div class="nav-group-label">Admin</div>
-        <a class="nav-link" href="#">Organization Setup</a>
+        <a class="nav-link {{ 'active' if request.endpoint == 'operations.organization' }}" href="{{ url_for('operations.organization') }}">Organization Setup</a>
         {% endif %}
       </nav>
 

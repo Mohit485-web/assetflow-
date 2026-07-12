@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Assets — AssetFlow{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Assets</h1><div class="subtitle">Register, locate, and track every organizational asset.</div></div></div>
+{% if current_user.is_admin or current_user.is_asset_manager %}
+<section class="card"><div class="card-header"><h3>Register asset</h3></div>
+{% if categories %}<form method="post" class="inline-form"><div class="field"><label>Name</label><input name="name" required placeholder="Dell Latitude 5440"></div><div class="field"><label>Category</label><select name="category_id" required><option value="">Select</option>{% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}</select></div><div class="field"><label>Serial number</label><input name="serial_number" placeholder="Optional"></div><div class="field"><label>Location</label><input name="location" placeholder="Head office"></div><label class="check-field"><input type="checkbox" name="is_bookable"> Shared / bookable</label><button class="btn btn-primary" type="submit">Register asset</button></form>{% else %}<p class="subtitle">Create an asset category first in <a href="{{ url_for('operations.organization') }}">Organization Setup</a>.</p>{% endif %}
+</section>{% endif %}
+<section class="card"><div class="card-header"><h3>Asset directory</h3><span class="tag-chip status-Available">{{ assets|length }} assets</span></div><table><thead><tr><th>Asset</th><th>Category</th><th>Location</th><th>Status</th></tr></thead><tbody>{% for asset in assets %}<tr><td><span class="tag-chip status-{{ asset.status }}">{{ asset.tag }}</span> {{ asset.name }}</td><td>{{ asset.category.name }}</td><td>{{ asset.location or '—' }}</td><td><span class="tag-chip status-{{ asset.status }}">{{ asset.status }}</span></td></tr>{% else %}<tr class="empty-row"><td colspan="4">No assets yet. Create a category, then register the first asset.</td></tr>{% endfor %}</tbody></table></section>
+{% endblock %}

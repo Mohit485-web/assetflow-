@@ -16,6 +16,10 @@
       <h2>Create your account</h2>
       <p class="subtitle">You'll join as an Employee. Your Admin can grant broader access later.</p>
 
+      <a class="google-button" href="{{ url_for('auth.google_login') }}"><span class="google-g" aria-hidden="true">G</span><span>Sign up with Google</span></a>
+      <a class="otp-callout" href="{{ url_for('auth.otp_signup') }}"><span class="otp-callout-icon">#</span><span><strong>Create account with OTP</strong><small>Verify your email or mobile number instead of setting a password.</small></span><span aria-hidden="true">→</span></a>
+      <div class="auth-divider"><span>or sign up with email</span></div>
+
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="flash-stack">

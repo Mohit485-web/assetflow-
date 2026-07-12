@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create account with OTP — AssetFlow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <main class="auth-shell auth-shell-user"><section class="auth-card auth-card-wide" aria-labelledby="signup-otp-title">
+    <a class="back-link" href="{{ url_for('auth.signup') }}">← Back to account options</a>
+    <div class="brand"><div class="brand-mark"></div><span class="brand-name" style="color:var(--ink);">AssetFlow</span></div>
+    <h1 id="signup-otp-title">Create account with OTP</h1>
+    <p class="subtitle">You'll join as an Employee. Verify by email or mobile; roles are assigned only by an administrator.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+    {% if not code_sent %}
+      <form method="post" class="form-stack"><input type="hidden" name="action" value="send">
+        <div class="field"><label for="name">Full name</label><input id="name" name="name" required autofocus value="{{ saved.get('name', '') }}" placeholder="Jordan Lee"></div>
+        <div class="field"><label for="email">Work email</label><input type="email" id="email" name="email" required value="{{ saved.get('email', '') }}" placeholder="you@company.com"></div>
+        <div class="field"><label for="phone">Mobile number <span class="optional-label">(needed for mobile OTP)</span></label><input type="tel" id="phone" name="phone" value="{{ saved.get('phone', '') }}" placeholder="+91 98765 43210"></div>
+        <div class="field"><label for="department_id">Department</label><select id="department_id" name="department_id"><option value="">Not assigned yet</option>{% for dept in departments %}<option value="{{ dept.id }}" {% if saved.get('department_id')|string == dept.id|string %}selected{% endif %}>{{ dept.name }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Send verification code to</label><div class="choice-row"><label><input type="radio" name="channel" value="email" checked> Email</label><label><input type="radio" name="channel" value="mobile"> Mobile</label></div></div>
+        <button class="btn btn-primary btn-block" type="submit">Send verification code</button>
+      </form>
+    {% else %}
+      <form method="post" class="form-stack"><input type="hidden" name="action" value="verify"><div class="field"><label for="code">6-digit verification code</label><input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus autocomplete="one-time-code" placeholder="000000"></div><button class="btn btn-primary btn-block" type="submit">Verify and create account</button></form>
+    {% endif %}
+  </section></main>
+</body>
+</html>
